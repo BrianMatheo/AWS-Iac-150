@@ -65,8 +65,7 @@ Resources:
       SecurityGroups:
         - !Ref EC2SecurityGroup
       UserData:
-        Fn::Base64: !Sub |
-          
+        Fn::Base64: |
           #!/bin/bash
           # =====================================================
           # SCRIPT DE DESPLIEGUE AUTOMÁTICO DESDE S3 HACIA EC2
