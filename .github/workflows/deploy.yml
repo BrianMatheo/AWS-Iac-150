@@ -25,9 +25,26 @@ jobs:
         aws cloudformation deploy \
           --template-file template.yml \
           --stack-name MiPrimerStackConGITHUB \
+    
+    - name: Upload proyecto.zip to S3
+      run: |
+        if [ -f proyecto.zip ]; then
+          echo "Subiendo proyecto.zip al bucket S3..."
+          aws s3 cp proyecto.zip s3://mintic-bucket-680578888516-us-east-1/proyecto.zip
+          echo "Archivo subido exitosamente"
+        else
+          echo "Advertencia: proyecto.zip no encontrado en el repositorio"
+        fi
       
     - name: Deploy EC2
-      run: aws cloudformation deploy --template-file templates/ec2.yml --stack-name MinTicEC2Stack
+      run: |
+        aws cloudformation deploy \
+          --template-file templates/ec2.yml \
+          --stack-name MinTicEC2Stack \
+          --capabilities CAPABILITY_IAM \
+          --parameter-overrides \
+            S3BucketName=mintic-bucket-680578888516-us-east-1 \
+            ProjectZipFile=proyecto.zip
 
     - name: Deploy S3
       run: aws cloudformation deploy --template-file templates/s3.yml --stack-name MinTicS3
