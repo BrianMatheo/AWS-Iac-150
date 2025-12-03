@@ -18,13 +18,22 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: MinTic Delete Full Architecture Stack
+    - name: MinTic Delete EC2 Web Stack
       run: |
-        echo "Eliminando stack MinticFullArchitecture..."
-        aws cloudformation delete-stack --stack-name MinticFullArchitecture
+        echo "Eliminando stack MinTicEC2WebStack..."
+        aws cloudformation delete-stack --stack-name MinTicEC2WebStack || echo "Stack MinTicEC2WebStack no encontrado o ya eliminado"
+        
+    - name: MinTic Delete Main Stack
+      run: |
+        echo "Eliminando stack principal MiPrimerStackConGITHUB..."
+        aws cloudformation delete-stack --stack-name MiPrimerStackConGITHUB
         
         echo "Esperando a que se complete la eliminación..."
-        aws cloudformation wait stack-delete-complete --stack-name MinticFullArchitecture
+        aws cloudformation wait stack-delete-complete --stack-name MiPrimerStackConGITHUB
         
-        echo "Stack MinticFullArchitecture eliminado exitosamente!"
-        echo "Recursos eliminados: VPC, Subnets, IGW, ALB, 4 EC2, ASG, Security Group"
+        echo "Stack MiPrimerStackConGITHUB eliminado exitosamente!"
+        echo "Recursos eliminados: VPC, Subnets, IGW, ALB, EC2 instances, ASG, Security Group, Instance Profile"
+        echo ""
+        echo "✅ Recursos preservados:"
+        echo "  - S3 Bucket: mintic-bucket-680578888516-us-east-1"
+        echo "  - IAM Role: Despliegue_EC2"
