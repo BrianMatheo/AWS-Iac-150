@@ -24,7 +24,8 @@ jobs:
       run: |
         aws cloudformation deploy \
           --template-file template.yml \
-          --stack-name MiPrimerStackConGITHUB
+          --stack-name MiPrimerStackConGITHUB \
+          --capabilities CAPABILITY_IAM
 
     - name: Check if S3 bucket exists
       id: check-bucket
