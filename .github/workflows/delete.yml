@@ -1,4 +1,4 @@
-name: MinTic Delete AWS CloudFormation Stack
+name: MinTic Delete AWS CloudFormation Stacks (Multi-Stage)
 
 on:
   workflow_dispatch:
@@ -18,22 +18,65 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: MinTic Delete EC2 Web Stack
+    - name: Stage 1 - Delete ASG Stack
       run: |
-        echo "Eliminando stack MinTicEC2WebStack..."
-        aws cloudformation delete-stack --stack-name MinTicEC2WebStack || echo "Stack MinTicEC2WebStack no encontrado o ya eliminado"
-        
-    - name: MinTic Delete Main Stack
-      run: |
-        echo "Eliminando stack principal MiPrimerStackConGITHUB..."
-        aws cloudformation delete-stack --stack-name MiPrimerStackConGITHUB
-        
-        echo "Esperando a que se complete la eliminación..."
-        aws cloudformation wait stack-delete-complete --stack-name MiPrimerStackConGITHUB
-        
-        echo "Stack MiPrimerStackConGITHUB eliminado exitosamente!"
-        echo "Recursos eliminados: VPC, Subnets, IGW, ALB, EC2 instances, ASG, Security Group, Instance Profile"
+        echo "  Stage 1: Eliminando Auto Scaling Group..."
+        aws cloudformation delete-stack --stack-name MinticASGStack || echo "⚠️  Stack MinticASGStack no encontrado"
+        echo " Esperando eliminación completa..."
+        aws cloudformation wait stack-delete-complete --stack-name MinticASGStack || echo "✅ Stack ya eliminado"
+        echo " ASG eliminado"
         echo ""
-        echo "✅ Recursos preservados:"
+
+    - name: Stage 2 - Delete ALB Stack
+      run: |
+        echo "  Stage 2: Eliminando Application Load Balancer..."
+        aws cloudformation delete-stack --stack-name MinticALBStack || echo "⚠️  Stack MinticALBStack no encontrado"
+        echo " Esperando eliminación completa..."
+        aws cloudformation wait stack-delete-complete --stack-name MinticALBStack || echo "✅ Stack ya eliminado"
+        echo " ALB eliminado"
+        echo ""
+
+    - name: Stage 3 - Delete EC2 Stack
+      run: |
+        echo "  Stage 3: Eliminando instancias EC2 estáticas..."
+        aws cloudformation delete-stack --stack-name MinticEC2Stack || echo "⚠️  Stack MinticEC2Stack no encontrado"
+        echo " Esperando eliminación completa..."
+        aws cloudformation wait stack-delete-complete --stack-name MinticEC2Stack || echo "✅ Stack ya eliminado"
+        echo " EC2 instances eliminadas"
+        echo ""
+
+    - name: Stage 4 - Delete Security Stack
+      run: |
+        echo "  Stage 4: Eliminando Security Group..."
+        aws cloudformation delete-stack --stack-name MinticSecurityStack || echo "⚠️  Stack MinticSecurityStack no encontrado"
+        echo " Esperando eliminación completa..."
+        aws cloudformation wait stack-delete-complete --stack-name MinticSecurityStack || echo "✅ Stack ya eliminado"
+        echo " Security Group eliminado"
+        echo ""
+
+    - name: Stage 5 - Delete VPC Stack
+      run: |
+        echo "  Stage 5: Eliminando VPC, Subnets e Internet Gateway..."
+        aws cloudformation delete-stack --stack-name MinticVPCStack || echo "⚠️  Stack MinticVPCStack no encontrado"
+        echo " Esperando eliminación completa..."
+        aws cloudformation wait stack-delete-complete --stack-name MinticVPCStack || echo "✅ Stack ya eliminado"
+        echo " VPC eliminada"
+        echo ""
+
+    - name: Summary
+      run: |
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo " ELIMINACIÓN COMPLETADA EXITOSAMENTE"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo ""
+        echo "📦 Recursos eliminados en orden:"
+        echo "  1. Auto Scaling Group (4 EC2)"
+        echo "  2. Application Load Balancer"
+        echo "  3. EC2 Instances estáticas (2)"
+        echo "  4. Security Group"
+        echo "  5. VPC, Subnets, Internet Gateway"
+        echo ""
+        echo "  Recursos preservados:"
         echo "  - S3 Bucket: mintic-bucket-680578888516-us-east-1"
         echo "  - IAM Role: Despliegue_EC2"
+        echo ""
